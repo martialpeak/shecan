@@ -23,13 +23,12 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
-      # gradle-version حذف شد — از gradle-wrapper.properties خوانده می‌شود
 
-    - name: Fix missing Gradle Wrapper & Make executable
-      run: |
-        mkdir -p gradle/wrapper
-        curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar
-        chmod +x ./gradlew
+    - name: Generate missing Gradle Wrapper
+      run: gradle wrapper
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
@@ -43,7 +42,6 @@ jobs:
 
     - name: Build and Sign Release APK
       run: ./gradlew assembleRelease --no-daemon
-      # signing از app/build.gradle و gradle.properties خوانده می‌شود
 
     - name: Upload Signed Release APK
       uses: actions/upload-artifact@v4
