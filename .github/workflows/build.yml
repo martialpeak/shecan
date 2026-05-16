@@ -23,11 +23,13 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.1.1'
+      # gradle-version حذف شد — از gradle-wrapper.properties خوانده می‌شود
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
 
     - name: Build Debug APK
-      run: gradle assembleDebug --no-daemon
+      run: ./gradlew assembleDebug --no-daemon
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
@@ -37,12 +39,8 @@ jobs:
         retention-days: 30
 
     - name: Build and Sign Release APK
-      run: |
-        gradle assembleRelease --no-daemon \
-          -Pandroid.injected.signing.store.file=$(pwd)/app/shecan-release.jks \
-          -Pandroid.injected.signing.store.password=shecan123 \
-          -Pandroid.injected.signing.key.alias=shecankey \
-          -Pandroid.injected.signing.key.password=shecan123
+      run: ./gradlew assembleRelease --no-daemon
+      # signing از app/build.gradle و gradle.properties خوانده می‌شود
 
     - name: Upload Signed Release APK
       uses: actions/upload-artifact@v4
