@@ -25,8 +25,11 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
       # gradle-version حذف شد — از gradle-wrapper.properties خوانده می‌شود
 
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
+    - name: Fix missing Gradle Wrapper & Make executable
+      run: |
+        mkdir -p gradle/wrapper
+        curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar
+        chmod +x ./gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
