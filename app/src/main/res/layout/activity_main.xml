@@ -159,7 +159,7 @@
             android:layout_marginBottom="12dp" />
 
         <!-- Update DDNS then Connect -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnUpdateAndConnect"
             android:layout_width="match_parent"
             android:layout_height="52dp"
@@ -167,8 +167,8 @@
             android:textSize="15sp"
             android:textColor="#00D4FF"
             android:backgroundTint="#111827"
-            android:strokeColor="#00D4FF"
-            android:strokeWidth="1dp"
+            app:strokeColor="#00D4FF"
+            app:strokeWidth="1dp"
             android:layout_marginBottom="8dp" />
 
         <!-- Update DDNS only -->
