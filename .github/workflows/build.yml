@@ -36,17 +36,13 @@ jobs:
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
 
-    - name: Decode Keystore
-      run: |
-        printf '%s' "${{ secrets.KEYSTORE_B64 }}" | base64 -d > shecan-release.jks
-
     - name: Build and Sign Release APK
       run: |
         gradle assembleRelease --no-daemon \
-          -Pandroid.injected.signing.store.file=$(pwd)/shecan-release.jks \
-          -Pandroid.injected.signing.store.password=${{ secrets.KEY_STORE_PASSWORD }} \
-          -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-          -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          -Pandroid.injected.signing.store.file=$(pwd)/app/shecan-release.jks \
+          -Pandroid.injected.signing.store.password=shecan123 \
+          -Pandroid.injected.signing.key.alias=shecankey \
+          -Pandroid.injected.signing.key.password=shecan123
 
     - name: Upload Signed Release APK
       uses: actions/upload-artifact@v4
