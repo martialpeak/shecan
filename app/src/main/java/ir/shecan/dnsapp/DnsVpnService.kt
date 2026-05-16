@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.net.VpnService
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -27,7 +26,6 @@ class DnsVpnService : VpnService() {
         const val CHANNEL_ID = "shecan_vpn_channel"
         const val NOTIFICATION_ID = 1
 
-        // شکن DNS Servers
         val PRIMARY_DNS = "178.22.122.101"
         val SECONDARY_DNS = "185.51.200.1"
 
@@ -60,11 +58,10 @@ class DnsVpnService : VpnService() {
         startForeground(NOTIFICATION_ID, buildNotification())
 
         try {
-            // Build VPN interface - فقط ترافیک DNS رو هدایت می‌کنه
+            // FIX: addRoute("0.0.0.0", 0) حذف شد — فقط DNS تغییر می‌کند، نه همه ترافیک
             val builder = Builder()
                 .setSession("ShecanDNS")
                 .addAddress("10.0.0.2", 32)
-                .addRoute("0.0.0.0", 0)
                 .addDnsServer(PRIMARY_DNS)
                 .addDnsServer(SECONDARY_DNS)
                 .setMtu(1500)
@@ -81,7 +78,6 @@ class DnsVpnService : VpnService() {
             running.set(true)
             isRunning = true
 
-            // Start packet forwarding thread
             vpnThread = Thread {
                 runVpnLoop()
             }.also { it.start() }
@@ -110,12 +106,9 @@ class DnsVpnService : VpnService() {
 
                 buffer.limit(length)
 
-                // بررسی بسته‌های DNS (پورت 53)
                 if (isDnsPacket(buffer, length)) {
-                    // بسته DNS رو به سرور شکن ارسال کن
                     forwardDnsPacket(buffer, length, outputStream)
                 } else {
-                    // بقیه ترافیک رو مستقیم ارسال کن
                     outputStream.write(buffer.array(), 0, length)
                 }
 
@@ -133,47 +126,45 @@ class DnsVpnService : VpnService() {
 
     private fun isDnsPacket(buffer: ByteBuffer, length: Int): Boolean {
         if (length < 28) return false
-        // بررسی پروتکل UDP (17) و پورت مقصد 53
         val protocol = buffer.get(9).toInt() and 0xFF
-        if (protocol != 17) return false // UDP only
+        if (protocol != 17) return false
         val destPort = ((buffer.get(22).toInt() and 0xFF) shl 8) or (buffer.get(23).toInt() and 0xFF)
         return destPort == 53
     }
 
     private fun forwardDnsPacket(buffer: ByteBuffer, length: Int, outputStream: FileOutputStream) {
         try {
-            // استخراج payload DNS از بسته UDP
-            val dnsPayloadOffset = 28 // IP header (20) + UDP header (8)
+            val dnsPayloadOffset = 28
             val dnsPayloadLength = length - dnsPayloadOffset
             if (dnsPayloadLength <= 0) return
 
             val dnsPayload = ByteArray(dnsPayloadLength)
             System.arraycopy(buffer.array(), dnsPayloadOffset, dnsPayload, 0, dnsPayloadLength)
 
-            // ارسال به سرور DNS شکن
-            val dnsSocket = DatagramSocket()
-            protect(dnsSocket) // جلوگیری از loop
+            val sourcePort = extractSourcePort(buffer)
 
-            val dnsServer = InetAddress.getByName(PRIMARY_DNS)
-            val sendPacket = DatagramPacket(dnsPayload, dnsPayloadLength, dnsServer, 53)
-            dnsSocket.send(sendPacket)
+            // FIX: از use{} استفاده شد تا socket همیشه بسته شود (memory leak برطرف شد)
+            DatagramSocket().use { dnsSocket ->
+                protect(dnsSocket)
 
-            // دریافت پاسخ
-            val responseBuffer = ByteArray(512)
-            val receivePacket = DatagramPacket(responseBuffer, responseBuffer.size)
-            dnsSocket.soTimeout = 3000
-            dnsSocket.receive(receivePacket)
-            dnsSocket.close()
+                val dnsServer = InetAddress.getByName(PRIMARY_DNS)
+                val sendPacket = DatagramPacket(dnsPayload, dnsPayloadLength, dnsServer, 53)
+                dnsSocket.send(sendPacket)
 
-            // ساخت بسته IP برای پاسخ و ارسال به تونل
-            val responseIpPacket = buildIpUdpPacket(
-                srcIp = PRIMARY_DNS,
-                dstIp = "10.0.0.2",
-                srcPort = 53,
-                dstPort = extractSourcePort(buffer),
-                payload = receivePacket.data.copyOf(receivePacket.length)
-            )
-            outputStream.write(responseIpPacket)
+                val responseBuffer = ByteArray(512)
+                val receivePacket = DatagramPacket(responseBuffer, responseBuffer.size)
+                dnsSocket.soTimeout = 3000
+                dnsSocket.receive(receivePacket)
+
+                val responseIpPacket = buildIpUdpPacket(
+                    srcIp = PRIMARY_DNS,
+                    dstIp = "10.0.0.2",
+                    srcPort = 53,
+                    dstPort = sourcePort,
+                    payload = receivePacket.data.copyOf(receivePacket.length)
+                )
+                outputStream.write(responseIpPacket)
+            }
 
         } catch (e: Exception) {
             Log.w(TAG, "DNS forward error: ${e.message}")
@@ -193,35 +184,31 @@ class DnsVpnService : VpnService() {
         val ipLength = 20 + udpLength
         val packet = ByteArray(ipLength)
 
-        // IP Header
-        packet[0] = 0x45.toByte() // Version + IHL
+        packet[0] = 0x45.toByte()
         packet[1] = 0x00
         packet[2] = (ipLength shr 8).toByte()
         packet[3] = (ipLength and 0xFF).toByte()
         packet[4] = 0x00; packet[5] = 0x01
         packet[6] = 0x00; packet[7] = 0x00
-        packet[8] = 0x40 // TTL
-        packet[9] = 0x11 // Protocol UDP
-        packet[10] = 0x00; packet[11] = 0x00 // Checksum (computed below)
+        packet[8] = 0x40
+        packet[9] = 0x11
+        packet[10] = 0x00; packet[11] = 0x00
 
         val src = InetAddress.getByName(srcIp).address
         val dst = InetAddress.getByName(dstIp).address
         System.arraycopy(src, 0, packet, 12, 4)
         System.arraycopy(dst, 0, packet, 16, 4)
 
-        // UDP Header
         packet[20] = (srcPort shr 8).toByte()
         packet[21] = (srcPort and 0xFF).toByte()
         packet[22] = (dstPort shr 8).toByte()
         packet[23] = (dstPort and 0xFF).toByte()
         packet[24] = (udpLength shr 8).toByte()
         packet[25] = (udpLength and 0xFF).toByte()
-        packet[26] = 0x00; packet[27] = 0x00 // UDP checksum
+        packet[26] = 0x00; packet[27] = 0x00
 
-        // DNS Payload
         System.arraycopy(payload, 0, packet, 28, payload.size)
 
-        // IP Checksum
         val checksum = computeChecksum(packet, 0, 20)
         packet[10] = (checksum shr 8).toByte()
         packet[11] = (checksum and 0xFF).toByte()

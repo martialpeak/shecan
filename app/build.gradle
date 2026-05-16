@@ -13,17 +13,36 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        // FIX: DDNS password از local.properties خوانده می‌شود
+        def ddnsPassword = project.findProperty('ddns_password') ?: ''
+        buildConfigField "String", "DDNS_PASSWORD", "\"${ddnsPassword}\""
+    }
+
+    // FIX: signing config تعریف شد تا APK قابل نصب باشد
+    signingConfigs {
+        release {
+            storeFile file("shecan-release.jks")
+            storePassword "shecan123"
+            keyAlias "shecankey"
+            keyPassword "shecan123"
+        }
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
         }
     }
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
     compileOptions {
@@ -44,4 +63,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    // FIX: CardView dependency اضافه شد
+    implementation 'androidx.cardview:cardview:1.0.0'
 }

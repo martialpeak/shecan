@@ -21,7 +21,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val VPN_REQUEST_CODE = 100
-        const val DDNS_URL = "https://ddns.shecan.ir/update?password=be36b57e172d0ecb"
+        // FIX: password از BuildConfig خوانده می‌شود (از local.properties)
+        val DDNS_URL get() = "https://ddns.shecan.ir/update?password=${BuildConfig.DDNS_PASSWORD}"
         val DNS_SERVERS = listOf("178.22.122.101", "185.51.200.1")
     }
 
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == VPN_REQUEST_CODE && resultCode == RESULT_OK) {
             startVpn()
@@ -131,7 +132,8 @@ class MainActivity : AppCompatActivity() {
     private fun startVpn() {
         val intent = Intent(this, DnsVpnService::class.java)
         intent.action = DnsVpnService.ACTION_START
-        startService(intent)
+        // FIX: startForegroundService به جای startService برای Android 8+
+        startForegroundService(intent)
         log("🔗 در حال اتصال به DNS شکن...")
         updateServiceStatus()
         setLoading(false)
