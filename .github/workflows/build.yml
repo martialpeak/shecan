@@ -36,12 +36,23 @@ jobs:
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
 
-    - name: Build Release APK (unsigned)
-      run: gradle assembleRelease --no-daemon
+    - name: Build and Sign Release APK
+      env:
+        KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      run: |
+        echo "$KEYSTORE_B64" | base64 -d > shecan-release.jks
+        gradle assembleRelease --no-daemon \
+          -Pandroid.injected.signing.store.file=$(pwd)/shecan-release.jks \
+          -Pandroid.injected.signing.store.password=$KEY_STORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
 
-    - name: Upload Release APK
+    - name: Upload Signed Release APK
       uses: actions/upload-artifact@v4
       with:
-        name: shecan-dns-release
+        name: shecan-dns-release-signed
         path: app/build/outputs/apk/release/*.apk
         retention-days: 30
