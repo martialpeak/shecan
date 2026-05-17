@@ -4,43 +4,216 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0A0E1A"
-    android:padding="0dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:gravity="center_horizontal"
+        android:padding="24dp">
 
         <!-- Header -->
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="شکن DNS"
-            android:textSize="32sp"
+            android:textSize="36sp"
             android:textStyle="bold"
-            android:textColor="#00D4FF"
-            android:gravity="center"
-            android:layout_marginTop="20dp"
-            android:fontFamily="sans-serif-condensed" />
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="32dp"
+            android:letterSpacing="0.02" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="DNS over VPN"
+            android:text="اتصال امن و بدون فیلتر"
             android:textSize="14sp"
             android:textColor="#6B7280"
-            android:gravity="center"
-            android:layout_marginBottom="30dp" />
+            android:layout_marginBottom="36dp" />
 
         <!-- Status Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="#111827"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            android:layout_marginBottom="16dp">
+            app:cardCornerRadius="24dp"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:gravity="center">
+
+                <!-- نشانگر وضعیت (بزرگ‌تر شده) -->
+                <View
+                    android:id="@+id/statusIndicator"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/status_disconnected"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="آماده اتصال"
+                    android:textColor="#F9FAFB"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- DNS Info Box -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#0A0E1A"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="DNS اول:"
+                                android:textColor="#9CA3AF"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvDns1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="---"
+                                android:textColor="#00D4FF"
+                                android:fontFamily="monospace"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#1F2937"
+                            android:layout_marginVertical="10dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="DNS دوم:"
+                                android:textColor="#9CA3AF"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvDns2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="---"
+                                android:textColor="#00D4FF"
+                                android:fontFamily="monospace"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:indeterminateTint="#00D4FF"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Main Connect Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConnect"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="اتصال VPN"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0A0E1A"
+            app:backgroundTint="#00D4FF"
+            app:cornerRadius="32dp"
+            app:elevation="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Secondary Actions Layout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <!-- Update DDNS then Connect -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUpdateAndConnect"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="آپدیت + اتصال"
+                android:textSize="13sp"
+                android:textColor="#00D4FF"
+                app:cornerRadius="26dp"
+                app:strokeColor="#00D4FF"
+                app:strokeWidth="1dp" />
+
+            <!-- Update DDNS only -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUpdateDdns"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="فقط آپدیت DDNS"
+                android:textSize="13sp"
+                android:textColor="#6B7280"
+                app:cornerRadius="26dp"
+                app:rippleColor="#1F2937" />
+
+        </LinearLayout>
+
+        <!-- Log Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#111827"
+            app:cardCornerRadius="20dp"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -48,174 +221,28 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <View
-                        android:id="@+id/statusIndicator"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:background="@drawable/status_disconnected"
-                        android:layout_marginEnd="12dp" />
-
-                    <TextView
-                        android:id="@+id/tvStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="قطع"
-                        android:textColor="#F9FAFB"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#1F2937"
-                    android:layout_marginVertical="16dp" />
-
-                <!-- DNS Info -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="DNS سرورها:"
-                    android:textColor="#6B7280"
+                    android:text="لاگ سیستم"
+                    android:textColor="#4B5563"
                     android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="اول:"
-                        android:textColor="#6B7280"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tvDns1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="---"
-                        android:textColor="#00D4FF"
-                        android:fontFamily="monospace"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="دوم:"
-                        android:textColor="#6B7280"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tvDns2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="---"
-                        android:textColor="#00D4FF"
-                        android:fontFamily="monospace"
-                        android:textSize="13sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:indeterminateTint="#00D4FF"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Main Connect Button -->
-        <Button
-            android:id="@+id/btnConnect"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="اتصال VPN"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:textColor="#0A0E1A"
-            android:backgroundTint="#00D4FF"
-            android:layout_marginBottom="12dp" />
-
-        <!-- Update DDNS then Connect -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnUpdateAndConnect"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="به‌روزرسانی IP + اتصال"
-            android:textSize="15sp"
-            android:textColor="#00D4FF"
-            android:backgroundTint="#111827"
-            app:strokeColor="#00D4FF"
-            app:strokeWidth="1dp"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Update DDNS only -->
-        <Button
-            android:id="@+id/btnUpdateDdns"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="فقط به‌روزرسانی DDNS"
-            android:textSize="14sp"
-            android:textColor="#6B7280"
-            android:backgroundTint="#111827"
-            android:layout_marginBottom="20dp" />
-
-        <!-- Log Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="#111827"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="لاگ"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
                 <TextView
                     android:id="@+id/tvLog"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="80dp"
-                    android:textColor="#D1D5DB"
+                    android:textColor="#9CA3AF"
                     android:fontFamily="monospace"
                     android:textSize="12sp"
+                    android:lineSpacingExtra="4dp"
                     android:hint="آماده..."
                     android:textColorHint="#374151" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>
