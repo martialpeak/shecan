@@ -1,6 +1,9 @@
 package ir.shecan.dnsapp
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.VpnService
 import android.os.Bundle
 import android.view.View
@@ -26,6 +29,15 @@ class MainActivity : AppCompatActivity() {
         val DNS_SERVERS = listOf("178.22.122.101", "185.51.200.1")
     }
 
+    // گیرنده پیام از سرویس VPN
+    private val vpnStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == DnsVpnService.ACTION_VPN_STATE_CHANGED) {
+                updateServiceStatus()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -33,6 +45,24 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
         updateServiceStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // ثبت گیرنده پیام وقتی صفحه باز است
+        val filter = IntentFilter(DnsVpnService.ACTION_VPN_STATE_CHANGED)
+        registerReceiver(vpnStateReceiver, filter)
+        updateServiceStatus()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // حذف گیرنده پیام وقتی صفحه بسته شد
+        try {
+            unregisterReceiver(vpnStateReceiver)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setupUI() {
@@ -139,11 +169,6 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, DnsVpnService::class.java)
         intent.action = DnsVpnService.ACTION_START
         startForegroundService(intent)
-        
-        lifecycleScope.launch {
-            delay(500) 
-            updateServiceStatus()
-        }
     }
 
     private fun stopVpn() {
@@ -151,7 +176,6 @@ class MainActivity : AppCompatActivity() {
         intent.action = DnsVpnService.ACTION_STOP
         startService(intent)
         log("🔌 VPN قطع شد")
-        updateServiceStatus()
     }
 
     private fun updateServiceStatus() {
@@ -161,7 +185,7 @@ class MainActivity : AppCompatActivity() {
             binding.tvStatus.text = "متصل به DNS شکن"
             binding.tvDns1.text = DNS_SERVERS[0]
             binding.tvDns2.text = DNS_SERVERS[1]
-            
+
             binding.btnUpdateAndConnect.visibility = View.GONE
             binding.btnUpdateDdns.visibility = View.GONE
         } else {
@@ -170,7 +194,7 @@ class MainActivity : AppCompatActivity() {
             binding.tvStatus.text = "آماده اتصال"
             binding.tvDns1.text = "---"
             binding.tvDns2.text = "---"
-            
+
             binding.btnUpdateAndConnect.visibility = View.VISIBLE
             binding.btnUpdateDdns.visibility = View.VISIBLE
         }
@@ -191,6 +215,7 @@ class MainActivity : AppCompatActivity() {
                 binding.btnConnect.isEnabled = true
                 binding.btnUpdateDdns.isEnabled = true
                 binding.btnUpdateAndConnect.isEnabled = true
+                binding.btnUpdateAndConnect.text = "آپدیت + اتصال" // ریست متن دکمه
             }
             LoadingState.CONNECTING -> {
                 binding.progressBar.visibility = View.VISIBLE
@@ -207,11 +232,6 @@ class MainActivity : AppCompatActivity() {
                 binding.btnUpdateAndConnect.text = "در حال آپدیت DDNS..."
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateServiceStatus()
     }
 }
 
