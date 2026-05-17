@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import ir.shecan.dnsapp.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -21,7 +22,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val VPN_REQUEST_CODE = 100
-        // FIX: password از BuildConfig خوانده می‌شود (از local.properties)
         val DDNS_URL get() = "https://ddns.shecan.ir/update?password=${BuildConfig.DDNS_PASSWORD}"
         val DNS_SERVERS = listOf("178.22.122.101", "185.51.200.1")
     }
@@ -55,22 +55,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateDdnsThenConnect() {
         lifecycleScope.launch {
-            setLoading(true)
+            setLoadingState(LoadingState.DDNS_UPDATING)
             log("در حال به‌روزرسانی DDNS...")
             val success = performDdnsUpdate()
             if (success) {
                 log("DDNS به‌روز شد. در حال اتصال VPN...")
+                setLoadingState(LoadingState.CONNECTING)
                 requestVpnPermission()
             } else {
-                log("خطا در به‌روزرسانی DDNS. لطفاً دوباره امتحان کنید.")
-                setLoading(false)
+                log("❌ خطا در به‌روزرسانی DDNS. لطفاً دوباره امتحان کنید.")
+                setLoadingState(LoadingState.IDLE)
             }
         }
     }
 
     private fun updateDdns() {
         lifecycleScope.launch {
-            setLoading(true)
+            setLoadingState(LoadingState.DDNS_UPDATING)
             log("در حال به‌روزرسانی DDNS...")
             val success = performDdnsUpdate()
             if (success) {
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 log("❌ خطا در به‌روزرسانی DDNS")
             }
-            setLoading(false)
+            setLoadingState(LoadingState.IDLE)
         }
     }
 
@@ -102,11 +103,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startVpnFlow() {
-        val intent = VpnService.prepare(this)
-        if (intent != null) {
-            startActivityForResult(intent, VPN_REQUEST_CODE)
-        } else {
-            startVpn()
+        lifecycleScope.launch {
+            setLoadingState(LoadingState.CONNECTING)
+            log("🔗 در حال آماده‌سازی اتصال...")
+            delay(100)
+            val intent = VpnService.prepare(this@MainActivity)
+            if (intent != null) {
+                startActivityForResult(intent, VPN_REQUEST_CODE)
+            } else {
+                startVpn()
+            }
         }
     }
 
@@ -125,18 +131,19 @@ class MainActivity : AppCompatActivity() {
             startVpn()
         } else {
             log("❌ دسترسی VPN رد شد")
-            setLoading(false)
+            setLoadingState(LoadingState.IDLE)
         }
     }
 
     private fun startVpn() {
         val intent = Intent(this, DnsVpnService::class.java)
         intent.action = DnsVpnService.ACTION_START
-        // FIX: startForegroundService به جای startService برای Android 8+
         startForegroundService(intent)
-        log("🔗 در حال اتصال به DNS شکن...")
-        updateServiceStatus()
-        setLoading(false)
+        
+        lifecycleScope.launch {
+            delay(500) 
+            updateServiceStatus()
+        }
     }
 
     private fun stopVpn() {
@@ -154,30 +161,62 @@ class MainActivity : AppCompatActivity() {
             binding.tvStatus.text = "متصل به DNS شکن"
             binding.tvDns1.text = DNS_SERVERS[0]
             binding.tvDns2.text = DNS_SERVERS[1]
+            
+            binding.btnUpdateAndConnect.visibility = View.GONE
+            binding.btnUpdateDdns.visibility = View.GONE
         } else {
             binding.btnConnect.text = "اتصال VPN"
             binding.statusIndicator.setBackgroundResource(R.drawable.status_disconnected)
-            binding.tvStatus.text = "قطع"
+            binding.tvStatus.text = "آماده اتصال"
             binding.tvDns1.text = "---"
             binding.tvDns2.text = "---"
+            
+            binding.btnUpdateAndConnect.visibility = View.VISIBLE
+            binding.btnUpdateDdns.visibility = View.VISIBLE
         }
+        setLoadingState(LoadingState.IDLE)
     }
 
     private fun log(message: String) {
         val current = binding.tvLog.text.toString()
-        val newLog = if (current.isEmpty()) message else "$message\n$current"
-        binding.tvLog.text = newLog
+        val newLog = "$message\n$current"
+        val lines = newLog.split("\n").take(20)
+        binding.tvLog.text = lines.joinToString("\n")
     }
 
-    private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-        binding.btnConnect.isEnabled = !loading
-        binding.btnUpdateDdns.isEnabled = !loading
-        binding.btnUpdateAndConnect.isEnabled = !loading
+    private fun setLoadingState(state: LoadingState) {
+        when (state) {
+            LoadingState.IDLE -> {
+                binding.progressBar.visibility = View.GONE
+                binding.btnConnect.isEnabled = true
+                binding.btnUpdateDdns.isEnabled = true
+                binding.btnUpdateAndConnect.isEnabled = true
+            }
+            LoadingState.CONNECTING -> {
+                binding.progressBar.visibility = View.VISIBLE
+                binding.btnConnect.isEnabled = false
+                binding.btnConnect.text = "در حال اتصال..."
+                binding.btnUpdateDdns.isEnabled = false
+                binding.btnUpdateAndConnect.isEnabled = false
+            }
+            LoadingState.DDNS_UPDATING -> {
+                binding.progressBar.visibility = View.VISIBLE
+                binding.btnConnect.isEnabled = false
+                binding.btnUpdateDdns.isEnabled = false
+                binding.btnUpdateAndConnect.isEnabled = false
+                binding.btnUpdateAndConnect.text = "در حال آپدیت DDNS..."
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         updateServiceStatus()
     }
+}
+
+enum class LoadingState {
+    IDLE,
+    CONNECTING,
+    DDNS_UPDATING
 }
