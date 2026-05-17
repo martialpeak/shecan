@@ -285,4 +285,7 @@ class DnsVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        stopV
+        stopVpn()
+        super.onDestroy()
+    }
+}
