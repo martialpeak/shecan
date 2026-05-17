@@ -50,7 +50,7 @@
                 android:padding="24dp"
                 android:gravity="center">
 
-                <!-- نشانگر وضعیت (بزرگ‌تر شده) -->
+                <!-- نشانگر وضعیت -->
                 <View
                     android:id="@+id/statusIndicator"
                     android:layout_width="32dp"
@@ -153,7 +153,7 @@
             android:indeterminateTint="#00D4FF"
             android:layout_marginBottom="12dp" />
 
-        <!-- Main Connect Button -->
+        <!-- Main Connect Button (تنها دکمه برنامه) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConnect"
             android:layout_width="match_parent"
@@ -165,45 +165,7 @@
             app:backgroundTint="#00D4FF"
             app:cornerRadius="32dp"
             app:elevation="4dp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Secondary Actions Layout -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
-
-            <!-- Update DDNS then Connect -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnUpdateAndConnect"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="آپدیت + اتصال"
-                android:textSize="13sp"
-                android:textColor="#00D4FF"
-                app:cornerRadius="26dp"
-                app:strokeColor="#00D4FF"
-                app:strokeWidth="1dp" />
-
-            <!-- Update DDNS only -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnUpdateDdns"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="فقط آپدیت DDNS"
-                android:textSize="13sp"
-                android:textColor="#6B7280"
-                app:cornerRadius="26dp"
-                app:rippleColor="#1F2937" />
-
-        </LinearLayout>
+            android:layout_marginBottom="24dp" />
 
         <!-- Log Card -->
         <com.google.android.material.card.MaterialCardView
