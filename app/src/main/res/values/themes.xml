@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.ShecanDNS" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#00D4FF</item>
-        <item name="colorPrimaryVariant">#0099BB</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#111827</item>
-        <item name="android:windowBackground">#0A0E1A</item>
-        <item name="android:statusBarColor">#0A0E1A</item>
-        <item name="android:navigationBarColor">#0A0E1A</item>
+        <!-- رنگ‌های اصلی -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        
+        <!-- رنگ‌های سطوح و پس‌زمینه -->
+        <item name="colorSurface">@color/surfaceDark</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="android:windowBackground">@color/backgroundDark</item>
+        
+        <!-- رنگ‌های سیستمی اندروید -->
+        <item name="android:statusBarColor">@color/backgroundDark</item>
+        <item name="android:navigationBarColor">@color/backgroundDark</item>
+        
+        <!-- مدیریت تم تاریک -->
+        <item name="android:isLightTheme">false</item>
+        
+        <!-- رنگ‌های پیش‌فرض کامپوننت‌ها -->
+        <item name="colorError">@color/statusDisconnected</item>
     </style>
 </resources>
