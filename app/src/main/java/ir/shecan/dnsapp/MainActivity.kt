@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -49,7 +50,14 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         val filter = IntentFilter(DnsVpnService.ACTION_VPN_STATE_CHANGED)
-        registerReceiver(vpnStateReceiver, filter)
+        
+        // رفع باگ کرش در اندروید ۱۳ (API 33) به بالا
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(vpnStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(vpnStateReceiver, filter)
+        }
+        
         updateServiceStatus()
     }
 
