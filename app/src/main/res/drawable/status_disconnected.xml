@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <solid android:color="#EF4444" />
-    <size android:width="16dp" android:height="16dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- هاله قرمز رنگ اطراف دایره -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#40EF4444" />
+            <size android:width="32dp" android:height="32dp" />
+        </shape>
+    </item>
+    <!-- دایره اصلی قرمز -->
+    <item
+        android:top="6dp"
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#EF4444" />
+            <size android:width="20dp" android:height="20dp" />
+        </shape>
+    </item>
+</layer-list>
