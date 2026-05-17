@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         val DNS_SERVERS = listOf("178.22.122.101", "185.51.200.1")
     }
 
-    // گیرنده پیام از سرویس VPN
     private val vpnStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == DnsVpnService.ACTION_VPN_STATE_CHANGED) {
@@ -49,7 +48,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // ثبت گیرنده پیام وقتی صفحه باز است
         val filter = IntentFilter(DnsVpnService.ACTION_VPN_STATE_CHANGED)
         registerReceiver(vpnStateReceiver, filter)
         updateServiceStatus()
@@ -57,7 +55,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // حذف گیرنده پیام وقتی صفحه بسته شد
         try {
             unregisterReceiver(vpnStateReceiver)
         } catch (e: Exception) {
@@ -68,48 +65,35 @@ class MainActivity : AppCompatActivity() {
     private fun setupUI() {
         binding.btnConnect.setOnClickListener {
             if (DnsVpnService.isRunning) {
+                // اگر وصل است، فقط قطع کن
                 stopVpn()
             } else {
-                startVpnFlow()
+                // اگر قطع است، اول آپدیت بعد وصل کن
+                startFullConnectionFlow()
             }
-        }
-
-        binding.btnUpdateDdns.setOnClickListener {
-            updateDdns()
-        }
-
-        binding.btnUpdateAndConnect.setOnClickListener {
-            updateDdnsThenConnect()
         }
     }
 
-    private fun updateDdnsThenConnect() {
+    // تابع اصلی که همه کارها رو پشت سر هم انجام میده
+    private fun startFullConnectionFlow() {
         lifecycleScope.launch {
+            // مرحله اول: آپدیت DDNS
             setLoadingState(LoadingState.DDNS_UPDATING)
-            log("در حال به‌روزرسانی DDNS...")
+            log("در حال به‌روزرسانی اجباری DDNS...")
+            
             val success = performDdnsUpdate()
+            
             if (success) {
-                log("DDNS به‌روز شد. در حال اتصال VPN...")
+                // مرحله دوم: اتصال VPN
+                log("✅ DDNS به‌روز شد. در حال اتصال VPN...")
                 setLoadingState(LoadingState.CONNECTING)
+                delay(500) // یک مکث کوتاه برای خواندن متن توسط کاربر
                 requestVpnPermission()
             } else {
-                log("❌ خطا در به‌روزرسانی DDNS. لطفاً دوباره امتحان کنید.")
+                // اگر آپدیت خطا خورد، وصل نشو
+                log("❌ خطا در به‌روزرسانی DDNS. اتصال لغو شد.")
                 setLoadingState(LoadingState.IDLE)
             }
-        }
-    }
-
-    private fun updateDdns() {
-        lifecycleScope.launch {
-            setLoadingState(LoadingState.DDNS_UPDATING)
-            log("در حال به‌روزرسانی DDNS...")
-            val success = performDdnsUpdate()
-            if (success) {
-                log("✅ DDNS با موفقیت به‌روز شد!")
-            } else {
-                log("❌ خطا در به‌روزرسانی DDNS")
-            }
-            setLoadingState(LoadingState.IDLE)
         }
     }
 
@@ -129,20 +113,6 @@ class MainActivity : AppCompatActivity() {
                 log("خطا: ${e.message}")
             }
             false
-        }
-    }
-
-    private fun startVpnFlow() {
-        lifecycleScope.launch {
-            setLoadingState(LoadingState.CONNECTING)
-            log("🔗 در حال آماده‌سازی اتصال...")
-            delay(100)
-            val intent = VpnService.prepare(this@MainActivity)
-            if (intent != null) {
-                startActivityForResult(intent, VPN_REQUEST_CODE)
-            } else {
-                startVpn()
-            }
         }
     }
 
@@ -185,18 +155,12 @@ class MainActivity : AppCompatActivity() {
             binding.tvStatus.text = "متصل به DNS شکن"
             binding.tvDns1.text = DNS_SERVERS[0]
             binding.tvDns2.text = DNS_SERVERS[1]
-
-            binding.btnUpdateAndConnect.visibility = View.GONE
-            binding.btnUpdateDdns.visibility = View.GONE
         } else {
             binding.btnConnect.text = "اتصال VPN"
             binding.statusIndicator.setBackgroundResource(R.drawable.status_disconnected)
             binding.tvStatus.text = "آماده اتصال"
             binding.tvDns1.text = "---"
             binding.tvDns2.text = "---"
-
-            binding.btnUpdateAndConnect.visibility = View.VISIBLE
-            binding.btnUpdateDdns.visibility = View.VISIBLE
         }
         setLoadingState(LoadingState.IDLE)
     }
@@ -213,23 +177,16 @@ class MainActivity : AppCompatActivity() {
             LoadingState.IDLE -> {
                 binding.progressBar.visibility = View.GONE
                 binding.btnConnect.isEnabled = true
-                binding.btnUpdateDdns.isEnabled = true
-                binding.btnUpdateAndConnect.isEnabled = true
-                binding.btnUpdateAndConnect.text = "آپدیت + اتصال" // ریست متن دکمه
             }
             LoadingState.CONNECTING -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.btnConnect.isEnabled = false
                 binding.btnConnect.text = "در حال اتصال..."
-                binding.btnUpdateDdns.isEnabled = false
-                binding.btnUpdateAndConnect.isEnabled = false
             }
             LoadingState.DDNS_UPDATING -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.btnConnect.isEnabled = false
-                binding.btnUpdateDdns.isEnabled = false
-                binding.btnUpdateAndConnect.isEnabled = false
-                binding.btnUpdateAndConnect.text = "در حال آپدیت DDNS..."
+                binding.btnConnect.text = "در حال آپدیت DDNS..."
             }
         }
     }
