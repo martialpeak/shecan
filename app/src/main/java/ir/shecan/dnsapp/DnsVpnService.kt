@@ -58,7 +58,6 @@ class DnsVpnService : VpnService() {
         startForeground(NOTIFICATION_ID, buildNotification())
 
         try {
-            // FIX: addRoute("0.0.0.0", 0) حذف شد — فقط DNS تغییر می‌کند، نه همه ترافیک
             val builder = Builder()
                 .setSession("ShecanDNS")
                 .addAddress("10.0.0.2", 32)
@@ -143,7 +142,6 @@ class DnsVpnService : VpnService() {
 
             val sourcePort = extractSourcePort(buffer)
 
-            // FIX: از use{} استفاده شد تا socket همیشه بسته شود (memory leak برطرف شد)
             DatagramSocket().use { dnsSocket ->
                 protect(dnsSocket)
 
@@ -258,12 +256,22 @@ class DnsVpnService : VpnService() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE
         )
+
+        // اضافه کردن دکمه قطع اتصال به نوتیفیکیشن
+        val stopIntent = Intent(this, DnsVpnService::class.java).apply {
+            action = ACTION_STOP
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("شکن DNS فعال است")
             .setContentText("DNS: $PRIMARY_DNS")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
+            .addAction(android.R.drawable.ic_media_pause, "قطع اتصال", stopPendingIntent)
             .build()
     }
 
