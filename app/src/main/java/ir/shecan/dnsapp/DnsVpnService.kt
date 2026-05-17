@@ -25,6 +25,7 @@ class DnsVpnService : VpnService() {
         const val ACTION_STOP = "STOP"
         const val CHANNEL_ID = "shecan_vpn_channel"
         const val NOTIFICATION_ID = 1
+        const val ACTION_VPN_STATE_CHANGED = "ir.shecan.dnsapp.VPN_STATE_CHANGED"
 
         val PRIMARY_DNS = "178.22.122.101"
         val SECONDARY_DNS = "185.51.200.1"
@@ -70,12 +71,13 @@ class DnsVpnService : VpnService() {
 
             if (vpnInterface == null) {
                 Log.e(TAG, "Failed to establish VPN interface")
-                stopSelf()
+                stopVpn()
                 return
             }
 
             running.set(true)
             isRunning = true
+            broadcastState(true) // ارسال پیام وصل شد به اکتیویتی
 
             vpnThread = Thread {
                 runVpnLoop()
@@ -231,11 +233,19 @@ class DnsVpnService : VpnService() {
     private fun stopVpn() {
         running.set(false)
         isRunning = false
+        broadcastState(false) // ارسال پیام قطع شد به اکتیویتی
         vpnThread?.interrupt()
         vpnInterface?.close()
         vpnInterface = null
         stopForeground(true)
         stopSelf()
+    }
+
+    // تابع جدید برای ارسال وضعیت به اکتیویتی
+    private fun broadcastState(isConnected: Boolean) {
+        val intent = Intent(ACTION_VPN_STATE_CHANGED)
+        intent.putExtra("is_connected", isConnected)
+        sendBroadcast(intent)
     }
 
     private fun createNotificationChannel() {
@@ -257,7 +267,6 @@ class DnsVpnService : VpnService() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        // اضافه کردن دکمه قطع اتصال به نوتیفیکیشن
         val stopIntent = Intent(this, DnsVpnService::class.java).apply {
             action = ACTION_STOP
         }
@@ -276,7 +285,4 @@ class DnsVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        stopVpn()
-        super.onDestroy()
-    }
-}
+        stopV
